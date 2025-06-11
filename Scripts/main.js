@@ -47,16 +47,10 @@ function getRanking() {
         ranking[i] = trainee;
       }
     }
-    
     // refresh table to show checkboxes
     rerenderTable();
-    
     // refresh ranking to show newly inserted trainees
     rerenderRanking();
-    if (urlParams.has("n")) {
-      let rankInt = atob(urlParams.get("n"));
-      lineupNumber(parseInt(rankInt));
-    }
     console.log(ranking);
   }
 }
@@ -65,13 +59,14 @@ function getRanking() {
 // Follows this schema:
 /*
 trainee: {
-  id: ... // position in csv used for simple recognition
-  number: ...
+  number: ... // position in csv used for simple recognition
   name_romanized: ...
   name_hangul: ...
   name_chinese: ...
   nationality: ...
   birthyear: ...
+  rank: ...
+  id: ...
   image: ...
   selected: false/true // whether user selected them
   eliminated: false/true
@@ -86,15 +81,15 @@ function convertCSVArrayToTraineeData(csvArrays) {
       // trainee only has hangul
       trainee.name_hangul = traineeArray[1];
     } else {
-      trainee.name_chinese = traineeArray[1];
+      trainee.name_japanese = traineeArray[1];
       trainee.name_hangul = traineeArray[2];
     }
-    trainee.nationality = traineeArray [3];
-    trainee.birthyear = traineeArray[4];
+    trainee.nationality = traineeArray[3];
+    trainee.birthyear = traineeArray [4];
     trainee.number = traineeArray[5];
     trainee.eliminated = traineeArray[6] === 'e'; // sets trainee to be eliminated if 'e' appears in 6th col
-    trainee.top8 = traineeArray[6] === 't'; // sets trainee to top 8 if 't' appears in 6th column
-    trainee.id = parseInt(traineeArray[7]) - 1; // trainee id is the original ordering of the trainees in the first csv
+    trainee.top6 = traineeArray[6] === 't'; // sets trainee to top 8 if 't' appears in 6th column
+    trainee.id = parseInt(traineeArray[8]) - 1; // trainee id is the original ordering of the trainees in the first csv
     trainee.image =
       trainee.name_romanized.replaceAll(" ", "").replaceAll("-", "") + ".png";
     return trainee;
@@ -108,17 +103,18 @@ function newTrainee() {
   return {
     id: -1, // -1 denotes a blank trainee spot
     name_romanized: '&#8203;', // this is a blank character
-    number: '&#8203;',
-    nationality: '&#8203;',
+    number: '&#8203;', // this is a blank character
     birthyear: '&#8203;',
+    nationality: '&#8203;',
+    rank: 'no',
     image: 'emptyrank.png',
   };
 }
 
 // Constructor for a blank ranking list
 function newRanking() {
-  // holds the ordered list of rankings that the user selects  
-  let ranking = new Array(24);
+  // holds the ordered list of rankings that the user selects
+  let ranking = new Array(12);
   for (let i = 0; i < ranking.length; i++) {
     ranking[i] = newTrainee();
   }
@@ -184,24 +180,23 @@ function populateTable(trainees) {
 function populateTableEntry(trainee) {
   // eliminated will have value "eliminated" only if trainee is eliminated and showEliminated is true, otherwise this is ""
   let eliminated = (showEliminated && trainee.eliminated) && "eliminated";
-  let top8 = (showTop8 && trainee.top8) && "top8";
+  let top6 = (showTop6 && trainee.top6) && "top6";
   const tableEntry = `
   <div class="table__entry ${eliminated}">
     <div class="table__entry-icon">
-      <img class="table__entry-img" src="assets/trainees/${trainee.image}" />
-      <div class="table__entry-icon-border ${trainee.grade.toLowerCase()}-rank-border"></div>
+      <img class="table__entry-img" src="Assets/Trainees/${Trainee.image}" />
+      <div class="table__entry-icon-border ${Trainee.grade.toLowerCase()}-rank-border"></div>
       ${
-        top8 ? '<div class="table__entry-icon-crown"></div>' : ''
+        top6 ? '<div class="table__entry-icon-crown"></div>' : ''
       }
       ${
         trainee.selected ? '<img class="table__entry-check" src="Assets/check.png"/>' : ""
       }
     </div>
     <div class="table__entry-text">
-      <span class="nameandnumber"><strong>${trainee.name_romanized_number}</strong></span>
+      <span class="numberandname"><strong>${trainee.number_name_romanized}</strong></span>
       <span class="hangul">(${trainee.name_hangul})</span>
-      <span class="nationalityandyear">${trainee.nationality.toUpperCase()} •
-      ${trainee.birthyear}</span>
+      <span class="birthyear">(${trainee.birthyear})</span>
     </div>
   </div>`;
   return tableEntry;
@@ -218,7 +213,6 @@ function populateRanking() {
     let rankRow = rankRows[i];
     for (let j = 0; j < rowNums[i]; j++) {
       let currTrainee = ranking[currRank-1];
-      console.log(currRank)
       rankRow.insertAdjacentHTML("beforeend", populateRankingEntry(currTrainee, currRank))
 
       let insertedEntry = rankRow.lastChild;
@@ -260,27 +254,28 @@ const abbreviatedNationalities = {
   "MALAYSIA": "MYS 🇲🇾",
   "JAPAN/FRANCE": "JPN/FRA 🇯🇵🇫🇷",
   "VIETNAM": "VNM 🇻🇳",
-  "TAIWAN": "TW",
+  "JAPAN/AUSTRALIA": "JPN/AUS 🇯🇵🇦🇺"
 }
 
 function populateRankingEntry(trainee, currRank) {
+  let modifiedNationality = trainee.birthyear;
   let eliminated = (showEliminated && trainee.eliminated) && "eliminated";
-  let top8 = (showTop8 && trainee.top8) && "top8";
+  let top6 = (showTop6 && trainee.top6) && "top6";
   const rankingEntry = `
   <div class="ranking__entry ${eliminated}">
     <div class="ranking__entry-view">
       <div class="ranking__entry-icon">
-        <img class="ranking__entry-img" src="Assets/Trainees/${trainee.image}" />
-        <div class="ranking__entry-icon-border ${trainee.grade.toLowerCase()}-rank-border" data-rankid="${currRank-1}"></div>
+        <img class="ranking__entry-img" src="Assets/Trainees/${Trainee.image}" />
+        <div class="ranking__entry-icon-border ${Trainee.grade.toLowerCase()}-rank-border" data-rankid="${currRank-1}"></div>
       </div>
-      <div class="ranking__entry-icon-badge bg-${trainee.grade.toLowerCase()}">${currRank}</div>
+      <div class="ranking__entry-icon-badge bg-${Trainee.grade.toLowerCase()}">${currRank}</div>
       ${
-        top8 ? '<div class="ranking__entry-icon-crown"></div>' : ''
+        top6 ? '<div class="ranking__entry-icon-crown"></div>' : ''
       }
     </div>
     <div class="ranking__row-text">
       <div class="name"><strong>${trainee.name_romanized}</strong></div>
-      <div class="numberandyear">${trainee.number_birthyear}</div>
+      <div class="nationality">${modifiedNationality}</div>
     </div>
   </div>`;
   return rankingEntry;
@@ -333,7 +328,7 @@ function swapTrainees(index1, index2) {
 // <original> is the original name as appearing on csv
 // all of it should be lower case
 const alternateRomanizations = {
-  'he xilong': ['boystory'],
+    'he xilong': ['boystory'],
   'jia hanyu': ['boystory'],
   'li zihao': ['boystory'],
   'zhong xing': ['1b1','3d poster'],
@@ -345,40 +340,40 @@ const alternateRomanizations = {
   'zheng renyu': ['s.k.y'],
   'yichen': ['project 7'],
   'bang junhyuk': ['win','mcnd'],
-	'dang honghai': ['boys planet','boys planet 1'],
-	'han harry-june': ['dkb'],
-	'kim dongyun': ['drippin','produce x 101','pdx101,'pdx'],
-	'kim junseo': ['wei'],
-	'lee hyeop': ['drippin','produce x 101','pdx101','pdx'],
-	'lee sangwon': ['trainee a'],
-	'no huijin': ['mcnd'],
-	'song minjae': ['mcnd'],
-	'yang heechan': ['dkb'],
-	'yoonmin': ['jyp loud'],
-	'zhang jiahao': ['makemate1','ma1'],
-	'han chris': ['blitzers'],
-	'guo zhen': ['s.k.y'],
-	'xie yuxin': ['universe league'],
-	'park junil': ['trainee a'],
-	'fujimaki taiga': ['nizi project'],
-	'huang xinyu': ['scool'],
-	'seowon': ['nine.i','boys planet','boys planet 1'],
-	'sun hengyu': ['u','blank2y'],
-	'leo',: ['trainee a'],
-	'bian shiyu': ['starlight boys','slb'],
-	'xie binghua': ['project 7'],
-	'kim donghyun': ['jyp loud'],
-	'chen jinxin': ['youth with you','youth with you 3'],
-	'jiangfan': ['universe league'],
-	'jeon leejeong': ['whib'],
-	'kim junmin': ['jayder','whib'],
-	'moon wonjun': ['whib],
-	'na yunseo': ['jyp loud'],
-	'thanatorn rueangsuwan': ['the wind'],
-	'yeom yechan': ['project 7'],
-	'zhou anxin': ['makemate1','ma1','3d poster'],
-	'nathparit chokrussameesiri': ['3d poster'],
-	'jung sanghyun': ['3d poster'],
+  'dang honghai': ['boys planet','boys planet 1'],
+  'han harry-june': ['dkb'],
+  'kim dongyun': ['drippin','produce x 101','pdx101,'pdx'],
+  'kim junseo': ['wei'],
+  'lee hyeop': ['drippin','produce x 101','pdx101','pdx'],
+  'lee sangwon': ['trainee a'],
+  'no huijin': ['mcnd'],
+  'song minjae': ['mcnd'],
+  'yang heechan': ['dkb'],
+  'yoonmin': ['jyp loud'],
+  'zhang jiahao': ['makemate1','ma1'],
+  'han chris': ['blitzers'],
+  'guo zhen': ['s.k.y'],
+  'xie yuxin': ['universe league'],
+  'park junil': ['trainee a'],
+  'fujimaki taiga': ['nizi project'],
+  'huang xinyu': ['scool'],
+  'seowon': ['nine.i','boys planet','boys planet 1'],
+  'sun hengyu': ['u','blank2y'],
+  'leo',: ['trainee a'],
+  'bian shiyu': ['starlight boys','slb'],
+  'xie binghua': ['project 7'],
+  'kim donghyun': ['jyp loud'],
+  'chen jinxin': ['youth with you','youth with you 3'],
+  'jiangfan': ['universe league'],
+  'jeon leejeong': ['whib'],
+  'kim junmin': ['jayder','whib'],
+  'moon wonjun': ['whib],
+  'na yunseo': ['jyp loud'],
+  'thanatorn rueangsuwan': ['the wind'],
+  'yeom yechan': ['project 7'],
+  'zhou anxin': ['makemate1','ma1','3d poster'],
+  'nathparit chokrussameesiri': ['3d poster'],
+  'jung sanghyun': ['3d poster'],
   'long guohao': ['fantasy boys','sonyeon pantaji','sonpa'],
   'fredrick choi': ['ciu liyu','choi lipwoo','3d poster'],
   'han ruize': ['youth with you'],
@@ -392,15 +387,14 @@ const alternateRomanizations = {
   'chen lichi': ['rickey','scool'],
   'lynnlynn': ['project 7'],
   'ngan chau yuet': ['starlight boys','slb'],
-  
 };
 
 // uses the current filter text to create a subset of trainees with matching info
 function filterTrainees(event) {
   let filterText = event.target.value.toLowerCase();
-  // filters trainees based on name, alternate names, nationality and birth year
-  filteredTrainees = trainees.filter(function (trainee) {
-    let initialMatch = includesIgnCase(trainee.name_romanized, filterText) || includesIgnCase (trainee.birthyear, filterText) || includesIgnCase (trainee.nationality, filterText) || includesIgnCase (trainee.grade, filterText);
+  // filters trainees based on name, alternate names, company, nationality and birth year
+  filteredTrainees = Trainees.filter(function (Trainee) {
+    let initialMatch = includesIgnCase(Trainee.number, filterText) || includesIgnCase (trainee.name_romanized, filterText) || includesIgnCase (trainee.birthyear, filterText) || includesIgnCase (trainee.nationality, filterText);
     // if alernates exists then check them as well
     let alternateMatch = false;
     let alternates = alternateRomanizations[trainee.name_romanized.toLowerCase()]
@@ -417,9 +411,8 @@ function filterTrainees(event) {
 
 // Checks if mainString includes a subString and ignores case
 function includesIgnCase(mainString, subString) {
-  return mainString.toLowerCase().includes(subString.toLowerCase());
+  return mainString.toString().toLowerCase().includes(subString.toLowerCase());
 }
-
 
 // Finds the first blank spot for
 function addRankedTrainee(trainee) {
@@ -442,12 +435,11 @@ function removeRankedTrainee(trainee) {
   return false;
 }
 
-//const currentURL = "https://b2pranker.github.io/";
-const currentURL = "https://kminstax.github.io/b2pranker/"
+const currentURL = "https://boys2planet.github.io/";
 // Serializes the ranking into a string and appends that to the current URL
 function generateShareLink() {
   let shareCode = ranking.map(function (trainee) {
-    let twoCharID = ("0" + trainee.id).slice(-2); // adds a zero to front of digit if necessary e.g 1 --> 01
+    let twoCharID = ("0" + Trainee.id).slice(-2); // adds a zero to front of digit if necessary e.g 1 --> 01
     return twoCharID;
   }).join("");
   console.log(shareCode);
@@ -456,6 +448,7 @@ function generateShareLink() {
   shareURL = currentURL + "?r=" + shareCode + "&n=" + shareNumber;
   showShareLink(shareURL);
 }
+
 function lineupNumber(number) {
   const rowsRankLists = {
     2: [1,1],
@@ -481,18 +474,17 @@ function lineupNumber(number) {
   } else {
 
   clearRanking();
-  rowNums = rowsRankLists[8];
+  rowNums = rowsRankLists[7];
   populateRanking();
 
   }
   
   document.getElementById('top-number').innerHTML = rowNums.reduce((accumulator, currentValue) => accumulator + currentValue, 0).toString();
-
 }
+
 function showSettings() {
   document.getElementById("settings").style.display = document.getElementById("settings").style.display == "block" ? "none" : "block";
 }
-
 
 function showShareLink(shareURL) {
   let shareBox = document.getElementById("getlink-textbox");
@@ -513,7 +505,7 @@ var trainees = [];
 var filteredTrainees = [];
 // holds the ordered list of rankings that the user selects
 var ranking = newRanking();
-var rowNums = [1,2,3];
+var rowNums = [1,3,4];
 //window.addEventListener("load", function () {
   populateRanking();
   readFromCSV("./trainee_info.csv");
