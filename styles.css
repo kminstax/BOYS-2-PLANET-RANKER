@@ -6,11 +6,11 @@
   --search-text-gray: #s949494;
   --search-gray: #f2f2f2;
   --affil-gray: #909090;
-  --name-pink: #d27eff;
+  --name-pink: #9f69bc;
   --other-name-gray: #444444;
   --ranking-affil-gray: #989898;
-  --save-box-pink: #d27eff;
-  --checked-pink: #f4b8f7;
+  --save-box-pink: #9f69bc;
+  --checked-pink: #9f69bc;
 
   /* ranking border colors */
   --top8: #f4b8f7;
@@ -28,7 +28,7 @@ body {
   min-width: 100%;
   /*TODO: I had the weirdest bug where if i don't have this background white the top banner would disappear
   it's super late right now and I'm not sure what is going on i need to look into this later */
-  background-color: black;
+  background-color: #282341;
 }
 
 /* Styles for banner */
@@ -41,7 +41,7 @@ body {
   color: white;
   text-align: center;
 }
-#banner-image {
+#banner-image: url("Assets/logo_white.png) {
   width: 250px;
   margin-bottom: 15px;
 }
@@ -103,21 +103,6 @@ body {
   background-position: 7px 7px;
   background-repeat: no-repeat;
 }
-#settings {
-  display: none;
-}
-#settings-button {
-  background-color: rgb(334, 34, 34, 0);
-  background-image: url("Assets/settings.png");
-  background-size: 50px 50px;
-  background-position: 6px 6px;
-  background-repeat: no-repeat;
-  border: none;
-  width: 60px;
-  height: 60px;
-  position: absolute;
-  top: 10px;
-}
 #customize_lineup {
   padding: 5px;
   margin-left: 5px;
@@ -147,7 +132,7 @@ body {
 }
 /* Styles for filtering at bottom of table */
 #filters-container {
-  margin: 10px;
+  margin: 15px;
 }
 .checkbox-label {
   font-size: 12px;
@@ -163,7 +148,7 @@ body {
   border: none;
   border-radius: 3px;
   padding: 4px 6px 4px 6px;
-  background-color: #f4b8f7;
+  background-color: #9f69bc;
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   font-weight: 700;
@@ -298,11 +283,16 @@ body {
   font-size: 12px;
   color: var(--name-gray);
 }
+}
+.table__entry-text .number {
+  font-size: 12px;
+  color: var(--name-gray);
+}
 .table__entry .hangul {
   font-size: 12px;
   color: var(--other-name-gray);
 }
-.table__entry .nationalityandyear {
+.table__entry .birthyear {
   font-size: 10px;
   color: var(--affil-gray);
   display: block;
@@ -311,7 +301,7 @@ body {
 /* Ranking Styles */
 #ranking__pyramid {
   /* min-width: 350px; */
-  margin: 40px 40px 10px 40px;
+  margin: 50px 50px 20px 50px;
   display: flex;
   flex-direction: column;
 }
@@ -391,7 +381,14 @@ body {
   background-color: var(--no-rank);
 }
 
-.ranking__entry .nationality {
+.ranking__entry .number {
+  color: var(--ranking-affil-gray);
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  font-size: 9px;
+  letter-spacing: 0.2px;
+}
+.ranking__entry .birthyear {
   color: var(--ranking-affil-gray);
   font-family: 'Open Sans', sans-serif;
   font-weight: 600;
